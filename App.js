@@ -79,50 +79,40 @@ export default function App() {
     runSimulation(currentOrder);
   };
 
-  const handleSuccess = () => {
-    Alert.alert(
-      'Success!',
-      `You reached the target health score of ${TARGET_HEALTH_SCORE}+ in ${attempt} attempts!`,
-      [
-        { text: 'Keep Experimenting', onPress: continueExperimenting },
-        { text: 'Play Again', onPress: startGame },
-        { text: 'Main Menu', onPress: () => setGameState('menu') }
-      ]
-    );
-  };
-
   const continueExperimenting = () => {
     // Stay in the game but allow continued experimentation
     setGameState('playing');
   };
 
   const renderMenu = () => (
-    <View style={styles.menuContainer}>
-      <Text style={styles.gameTitle}>Nudge</Text>
-      <Text style={styles.gameSubtitle}>The Power of Placement</Text>
-      
-      <View style={styles.conceptContainer}>
-        <Text style={styles.conceptTitle}>Core Concept</Text>
-        <Text style={styles.conceptText}>
-          Position influences behavior more than personal preferences. 
-          This simple principle can dramatically change outcomes.
-        </Text>
+    <ScrollView contentContainerStyle={styles.menuScrollContainer} showsVerticalScrollIndicator={false}>
+      <View style={styles.menuContainer}>
+        <Text style={styles.gameTitle}>Nudge</Text>
+        <Text style={styles.gameSubtitle}>The Power of Placement</Text>
+        
+        <View style={styles.conceptContainer}>
+          <Text style={styles.conceptTitle}>Core Concept</Text>
+          <Text style={styles.conceptText}>
+            Position influences behavior more than personal preferences. 
+            This simple principle can dramatically change outcomes.
+          </Text>
+        </View>
+        
+        <View style={styles.challengeContainer}>
+          <Text style={styles.challengeTitle}>Your Challenge</Text>
+          <Text style={styles.challengeText}>
+            Rearrange 6 food items to achieve a health score of {TARGET_HEALTH_SCORE}+
+          </Text>
+          <Text style={styles.challengeText}>
+            You can only change the ORDER - not the items themselves.
+          </Text>
+        </View>
+        
+        <TouchableOpacity style={styles.startButton} onPress={startGame}>
+          <Text style={styles.buttonText}>Start Learning</Text>
+        </TouchableOpacity>
       </View>
-      
-      <View style={styles.challengeContainer}>
-        <Text style={styles.challengeTitle}>Your Challenge</Text>
-        <Text style={styles.challengeText}>
-          Rearrange 6 food items to achieve a health score of {TARGET_HEALTH_SCORE}+
-        </Text>
-        <Text style={styles.challengeText}>
-          You can only change the ORDER - not the items themselves.
-        </Text>
-      </View>
-      
-      <TouchableOpacity style={styles.startButton} onPress={startGame}>
-        <Text style={styles.buttonText}>Start Learning</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 
   const renderGame = () => (
@@ -174,20 +164,33 @@ export default function App() {
       
       <View style={styles.actionContainer}>
         {healthScore >= TARGET_HEALTH_SCORE ? (
-          <TouchableOpacity style={styles.successButton} onPress={handleSuccess}>
-            <Text style={styles.buttonText}>
-              {hasWon ? 'Keep Experimenting' : 'Success!'}
+          <View style={styles.successContainer}>
+            <Text style={styles.successTitle}>Success!</Text>
+            <Text style={styles.successMessage}>
+              You reached the target health score of {TARGET_HEALTH_SCORE}+ in {attempt} attempts!
             </Text>
-          </TouchableOpacity>
+            <View style={styles.successButtons}>
+              <TouchableOpacity style={styles.successButton} onPress={continueExperimenting}>
+                <Text style={styles.buttonText}>Keep Experimenting</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.successButton} onPress={startGame}>
+                <Text style={styles.buttonText}>Play Again</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuButton} onPress={() => setGameState('menu')}>
+                <Text style={styles.buttonText}>Main Menu</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         ) : (
-          <TouchableOpacity style={styles.tryAgainButton} onPress={tryAgain}>
-            <Text style={styles.buttonText}>Try Again (Need {TARGET_HEALTH_SCORE}+)</Text>
-          </TouchableOpacity>
+          <View style={styles.tryAgainContainer}>
+            <TouchableOpacity style={styles.tryAgainButton} onPress={tryAgain}>
+              <Text style={styles.buttonText}>Try Again (Need {TARGET_HEALTH_SCORE}+)</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuButton} onPress={() => setGameState('menu')}>
+              <Text style={styles.buttonText}>Main Menu</Text>
+            </TouchableOpacity>
+          </View>
         )}
-        
-        <TouchableOpacity style={styles.menuButton} onPress={() => setGameState('menu')}>
-          <Text style={styles.buttonText}>Main Menu</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -207,12 +210,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
+  menuScrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    minHeight: '100%',
+  },
   menuContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: '#fff',
+    paddingVertical: 40,
   },
   gameTitle: {
     fontSize: 42,
@@ -356,9 +364,35 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
   },
+  successContainer: {
+    backgroundColor: '#d4edda',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#c3e6cb',
+    marginBottom: 16,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#155724',
+    marginBottom: 12,
+  },
+  successMessage: {
+    fontSize: 16,
+    color: '#155724',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  successButtons: {
+    width: '100%',
+    alignItems: 'center',
+  },
   successButton: {
     backgroundColor: '#28a745',
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
     marginBottom: 12,
@@ -367,6 +401,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
+    minWidth: 200,
+  },
+  tryAgainContainer: {
+    alignItems: 'center',
+    width: '100%',
   },
   tryAgainButton: {
     backgroundColor: '#007bff',
