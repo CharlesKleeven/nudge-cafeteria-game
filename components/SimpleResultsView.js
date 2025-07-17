@@ -1,11 +1,19 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const SimpleResultsView = ({ results, healthScore, insights, comparison, target }) => {
+const SimpleResultsView = ({ results, healthScore, insights, comparison, target, isFirstDay = false }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Results</Text>
+      <Text style={styles.title}>{isFirstDay ? 'Day 0 Results' : 'Daily Results'}</Text>
       
+      {isFirstDay && (
+        <View style={styles.narrativeContainer}>
+          <Text style={styles.narrativeText}>
+            Your first day on the job. You observed the lunch rush and took notes on what happened...
+          </Text>
+        </View>
+      )}
+
       {/* Health Score - Big and Clear */}
       <View style={styles.healthContainer}>
         <Text style={styles.healthLabel}>Average Health Score</Text>
@@ -18,25 +26,27 @@ const SimpleResultsView = ({ results, healthScore, insights, comparison, target 
         <Text style={styles.healthTarget}>Target: {target}+</Text>
       </View>
 
-      {/* Position Effects - Visual Bar Chart */}
+      {/* Student Selection Results */}
       <View style={styles.positionContainer}>
-        <Text style={styles.sectionTitle}>Position Effects</Text>
-        <Text style={styles.sectionSubtitle}>How placement influences student choices</Text>
-        
+        <Text style={styles.sectionTitle}>What Students Chose</Text>
+        <Text style={styles.sectionSubtitle}>
+          {isFirstDay ? 'Here\'s what you noticed during the lunch rush:' : 'You watched 100 students go through the line. Here\'s what they picked:'}
+        </Text>
+
         {results.map((result, index) => (
           <View key={result.foodId} style={styles.positionRow}>
             <View style={styles.positionInfo}>
               <Text style={styles.positionEmoji}>{result.food.emoji}</Text>
               <Text style={styles.positionNumber}>#{result.position}</Text>
             </View>
-            
+
             <View style={styles.barContainer}>
-              <View 
+              <View
                 style={[
                   styles.bar,
-                  { 
+                  {
                     width: `${result.choiceRate}%`,
-                    backgroundColor: result.food.healthValue > 60 ? '#28a745' : '#dc3545'
+                    backgroundColor: '#007bff'
                   }
                 ]}
               />
@@ -64,7 +74,7 @@ const SimpleResultsView = ({ results, healthScore, insights, comparison, target 
             Your Changes
           </Text>
           <Text style={styles.comparisonHealth}>
-            Health Score: {comparison.oldHealth} → {comparison.newHealth} 
+            Health Score: {comparison.oldHealth} → {comparison.newHealth}
             <Text style={[
               styles.comparisonChange,
               { color: comparison.healthChange > 0 ? '#28a745' : comparison.healthChange < 0 ? '#dc3545' : '#6c757d' }
@@ -72,10 +82,10 @@ const SimpleResultsView = ({ results, healthScore, insights, comparison, target 
               {comparison.healthChange > 0 ? '+' : comparison.healthChange < 0 ? '' : '+'}{comparison.healthChange}
             </Text>
           </Text>
-          
+
           {comparison.changes.map((change, index) => (
             <Text key={index} style={styles.changeText}>
-              • {change.food.name}: {change.oldChoiceRate}% → {change.newChoiceRate}% 
+              • {change.food.name}: {change.oldChoiceRate}% → {change.newChoiceRate}%
               <Text style={[
                 styles.changeNumber,
                 { color: change.change > 0 ? '#28a745' : change.change < 0 ? '#dc3545' : '#6c757d' }
@@ -223,6 +233,25 @@ const styles = StyleSheet.create({
   },
   changeNumber: {
     fontWeight: 'bold',
+  },
+  narrativeContainer: {
+    backgroundColor: '#1976d2',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 24,
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  narrativeText: {
+    fontSize: 18,
+    color: '#ffffff',
+    lineHeight: 24,
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });
 

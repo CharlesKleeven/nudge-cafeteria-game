@@ -15,7 +15,7 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
 
   const moveItem = (fromIndex, toIndex) => {
     if (disabled) return;
-    
+
     const newOrder = [...foodOrder];
     const [removed] = newOrder.splice(fromIndex, 1);
     newOrder.splice(toIndex, 0, removed);
@@ -44,7 +44,7 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
         <View style={styles.positionIndicator}>
           <Text style={styles.positionNumber}>#{index + 1}</Text>
         </View>
-        
+
         <View style={styles.foodContent}>
           <Text style={styles.foodEmoji}>{foodData.emoji}</Text>
           <View style={styles.foodInfo}>
@@ -54,7 +54,7 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.controls}>
           <TouchableOpacity
             style={[styles.controlButton, !canMoveUp && styles.controlButtonDisabled]}
@@ -65,7 +65,7 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
               ↑
             </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.controlButton, !canMoveDown && styles.controlButtonDisabled]}
             onPress={() => moveDown(index)}
@@ -86,11 +86,11 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
       <Text style={styles.subtitle}>
         {disabled ? 'Current arrangement' : 'Use ↑↓ arrows to reorder'}
       </Text>
-      
+
       <ScrollView style={styles.foodList} showsVerticalScrollIndicator={false}>
         {foodOrder.map((foodId, index) => renderFoodItem(foodId, index))}
       </ScrollView>
-      
+
       {disabled && (
         <View style={styles.disabledOverlay}>
           <Text style={styles.disabledText}>Viewing current arrangement</Text>
