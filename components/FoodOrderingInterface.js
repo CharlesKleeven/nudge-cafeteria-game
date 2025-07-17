@@ -7,15 +7,16 @@ import {
 } from 'react-native';
 import { FOOD_ITEMS } from '../gameData';
 
-const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) => {
+const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false, swapsUsed = 0, onSwapUsed, onResetSwaps }) => {
   const [selectedItems, setSelectedItems] = useState([]);
+  const maxSwaps = 1;
 
   const getFoodItemData = (foodId) => {
     return FOOD_ITEMS.find(item => item.id === foodId);
   };
 
   const handleItemPress = (index) => {
-    if (disabled) return;
+    if (disabled || swapsUsed >= maxSwaps) return;
 
     const isSelected = selectedItems.includes(index);
 
@@ -36,6 +37,9 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
         [newOrder[firstIndex], newOrder[secondIndex]] = [newOrder[secondIndex], newOrder[firstIndex]];
         onOrderChange(newOrder);
 
+        // Track the swap
+        if (onSwapUsed) onSwapUsed();
+
         // Clear selection
         setSelectedItems([]);
       }
@@ -52,11 +56,11 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
         style={[
           styles.gridItem,
           isSelected && styles.gridItemSelected,
-          disabled && styles.gridItemDisabled
+          (disabled || swapsUsed >= maxSwaps) && styles.gridItemDisabled
         ]}
         onPress={() => handleItemPress(index)}
-        disabled={disabled}
-        activeOpacity={disabled ? 1 : 0.7}
+        disabled={disabled || swapsUsed >= maxSwaps}
+        activeOpacity={(disabled || swapsUsed >= maxSwaps) ? 1 : 0.7}
       >
         <View style={[styles.gridContent, isSelected && styles.gridContentSelected]}>
           <Text style={styles.gridEmoji}>{foodData.emoji}</Text>
@@ -76,14 +80,18 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
     <View style={styles.container}>
       <Text style={styles.title}>Cafeteria Layout</Text>
       <Text style={styles.subtitle}>
-        {disabled ? 'Current arrangement' : 'Tap two items to swap their positions'}
+        {disabled 
+          ? 'Current arrangement' 
+          : swapsUsed >= maxSwaps 
+            ? 'One swap per day - ready to test this arrangement!' 
+            : 'Tap two items to swap their positions (1 swap allowed)'}
       </Text>
 
       <View style={styles.flowContainer}>
         <View style={styles.gameWrapper}>
           <View style={styles.gridContainer}>
             <View style={styles.studentFlow}>
-              <Text style={styles.studentFlowText}>Students</Text>
+              <Text style={styles.studentFlowText}>Student Flow</Text>
               <Text style={styles.studentFlowArrow}>↓</Text>
               <Text style={styles.studentFlowArrow}>↓</Text>
               <Text style={styles.studentFlowArrow}>↓</Text>
@@ -96,11 +104,6 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
         </View>
       </View>
 
-      {disabled && (
-        <View style={styles.disabledOverlay}>
-          <Text style={styles.disabledText}>Viewing current arrangement</Text>
-        </View>
-      )}
 
       {/* Selection feedback */}
       {selectedItems.length > 0 && (
@@ -108,6 +111,18 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false }) =
           <Text style={styles.selectionText}>
             {selectedItems.length === 1 ? 'Now tap another item to swap' : 'Swapping items...'}
           </Text>
+        </View>
+      )}
+
+      {/* Reset button when swaps are used up */}
+      {!disabled && swapsUsed >= maxSwaps && onResetSwaps && (
+        <View style={styles.resetContainer}>
+          <TouchableOpacity style={styles.resetButton} onPress={() => {
+            setSelectedItems([]);
+            onResetSwaps();
+          }}>
+            <Text style={styles.resetButtonText}>Reset Swap (Try Different Arrangement)</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -265,6 +280,22 @@ const styles = StyleSheet.create({
     zIndex: 1001,
   },
   selectionText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  resetContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  resetButton: {
+    backgroundColor: '#6c757d',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  resetButtonText: {
     color: 'white',
     fontSize: 14,
     fontWeight: '600',

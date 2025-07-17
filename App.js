@@ -20,7 +20,7 @@ import {
 
 export default function App() {
   const [gameState, setGameState] = useState('menu');
-  const [attempt, setAttempt] = useState(1);
+  const [attempt, setAttempt] = useState(0);
   const [currentOrder, setCurrentOrder] = useState([...DEFAULT_FOOD_ORDER]);
   const [results, setResults] = useState(null);
   const [healthScore, setHealthScore] = useState(0);
@@ -28,10 +28,11 @@ export default function App() {
   const [comparison, setComparison] = useState(null);
   const [lastOrder, setLastOrder] = useState([...DEFAULT_FOOD_ORDER]);
   const [hasWon, setHasWon] = useState(false);
+  const [swapsUsed, setSwapsUsed] = useState(0);
 
   const startGame = () => {
     setGameState('playing');
-    setAttempt(1);
+    setAttempt(0);
     setCurrentOrder([...DEFAULT_FOOD_ORDER]);
     setResults(null);
     setHealthScore(0);
@@ -39,9 +40,7 @@ export default function App() {
     setComparison(null);
     setLastOrder([...DEFAULT_FOOD_ORDER]);
     setHasWon(false);
-
-    // Show baseline results immediately
-    runSimulation([...DEFAULT_FOOD_ORDER]);
+    setSwapsUsed(0);
   };
 
   const runSimulation = (order) => {
@@ -51,7 +50,7 @@ export default function App() {
 
     // Compare with previous attempt if not the first
     let comp = null;
-    if (attempt > 1) {
+    if (attempt > 0) {
       comp = compareArrangements(lastOrder, order);
     }
 
@@ -73,6 +72,7 @@ export default function App() {
     setAttempt(attempt + 1);
     setGameState('playing');
     setComparison(null);
+    setSwapsUsed(0);
   };
 
   const finishAttempt = () => {
@@ -82,6 +82,7 @@ export default function App() {
   const continueExperimenting = () => {
     // Stay in the game but allow continued experimentation
     setGameState('playing');
+    setSwapsUsed(0);
   };
 
   const renderMenu = () => (
@@ -126,9 +127,9 @@ export default function App() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Text style={styles.attemptTitle}>Day {attempt - 1}</Text>
+        <Text style={styles.attemptTitle}>Day {attempt}</Text>
         <Text style={styles.headerSubtitle}>
-          {attempt === 1 ? 'Observing the current cafeteria line setup' : 'Rearrange the food items to improve health scores'}
+          {attempt === 0 ? 'First day: Observe the current arrangement' : 'Make one strategic swap to improve health scores'}
         </Text>
         <Text style={styles.goalText}>Goal: Health Score {TARGET_HEALTH_SCORE}+</Text>
       </View>
@@ -136,34 +137,22 @@ export default function App() {
       <FoodOrderingInterface
         foodOrder={currentOrder}
         onOrderChange={setCurrentOrder}
-        disabled={attempt === 1}
+        disabled={attempt === 0}
+        swapsUsed={swapsUsed}
+        onSwapUsed={() => setSwapsUsed(swapsUsed + 1)}
+        onResetSwaps={() => {
+          setSwapsUsed(0);
+          setCurrentOrder([...DEFAULT_FOOD_ORDER]);
+        }}
       />
 
-      {attempt === 1 && (
-        <View style={styles.baselineContainer}>
-          <View style={styles.observationBanner}>
-            <Text style={styles.observationTitle}>OBSERVATION DAY</Text>
-            <Text style={styles.observationSubtitle}>Today you're just watching and learning how students currently choose</Text>
-          </View>
-          <Text style={styles.baselineText}>
-            It's your first day as cafeteria manager.
+      <View style={styles.controlsContainer}>
+        <TouchableOpacity style={styles.testButton} onPress={finishAttempt}>
+          <Text style={styles.buttonText}>
+            {attempt === 0 ? 'Ready for Day 1' : 'Test This Arrangement'}
           </Text>
-          <Text style={styles.baselineSubtext}>
-            The lunch rush is about to begin. You want to observe how students choose their food with the current setup...
-          </Text>
-          <TouchableOpacity style={styles.simulateButton} onPress={() => runSimulation(currentOrder)}>
-            <Text style={styles.buttonText}>Watch the Lunch Rush</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {attempt > 1 && (
-        <View style={styles.controlsContainer}>
-          <TouchableOpacity style={styles.testButton} onPress={finishAttempt}>
-            <Text style={styles.buttonText}>Test This Arrangement</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 
@@ -175,7 +164,7 @@ export default function App() {
         insights={insights}
         comparison={comparison}
         target={TARGET_HEALTH_SCORE}
-        isFirstDay={attempt === 1}
+        isFirstDay={attempt === 0}
       />
 
       <View style={styles.actionContainer}>
@@ -183,7 +172,7 @@ export default function App() {
           <View style={styles.successContainer}>
             <Text style={styles.successTitle}>Success!</Text>
             <Text style={styles.successMessage}>
-              You reached the target health score of {TARGET_HEALTH_SCORE}+ on Day {attempt - 1}!
+              You reached the target health score of {TARGET_HEALTH_SCORE}+ on Day {attempt}!
             </Text>
             <View style={styles.successButtons}>
               <TouchableOpacity style={styles.successButton} onPress={continueExperimenting}>
@@ -201,7 +190,7 @@ export default function App() {
           <View style={styles.tryAgainContainer}>
             <TouchableOpacity style={styles.tryAgainButton} onPress={tryAgain}>
               <Text style={styles.buttonText}>
-                {attempt === 1 ? 'Got it - Ready for Day 1' : `Day ${attempt} - Try New Arrangement`}
+                {attempt === 0 ? 'Got it - Ready for Day 1' : `Day ${attempt + 1} - Try New Arrangement`}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuButton} onPress={() => setGameState('menu')}>
