@@ -120,7 +120,11 @@ export default function App() {
   );
 
   const renderGame = () => (
-    <View style={styles.gameContainer}>
+    <ScrollView
+      style={styles.gameContainer}
+      contentContainerStyle={styles.gameScrollContent}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.attemptTitle}>Day {attempt - 1}</Text>
         <Text style={styles.headerSubtitle}>
@@ -160,7 +164,7 @@ export default function App() {
           </TouchableOpacity>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 
   const renderResults = () => (
@@ -310,7 +314,11 @@ const styles = StyleSheet.create({
   },
   gameContainer: {
     flex: 1,
-    paddingTop: 50,
+    paddingTop: 20,
+  },
+  gameScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   header: {
     padding: 20,
@@ -381,7 +389,7 @@ const styles = StyleSheet.create({
   },
   resultsContainer: {
     flex: 1,
-    paddingTop: 50,
+    paddingTop: 20,
   },
   actionContainer: {
     padding: 24,

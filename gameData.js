@@ -57,5 +57,5 @@ export const DEFAULT_FOOD_ORDER = [
   'pizza', 'cookies', 'sandwich', 'smoothie', 'apple', 'salad'
 ];
 
-export const TARGET_HEALTH_SCORE = 80;
+export const TARGET_HEALTH_SCORE = 90;
 export const STUDENT_COUNT = 100;

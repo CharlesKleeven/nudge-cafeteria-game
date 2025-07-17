@@ -33,27 +33,37 @@ const SimpleResultsView = ({ results, healthScore, insights, comparison, target,
           {isFirstDay ? 'Here\'s what you noticed during the lunch rush:' : 'You watched 100 students go through the line. Here\'s what they picked:'}
         </Text>
 
-        {results.map((result, index) => (
-          <View key={result.foodId} style={styles.positionRow}>
-            <View style={styles.positionInfo}>
-              <Text style={styles.positionEmoji}>{result.food.emoji}</Text>
-              <Text style={styles.positionNumber}>#{result.position}</Text>
-            </View>
+        {[
+          { id: 'apple', name: 'Apple', emoji: '🍎' },
+          { id: 'pizza', name: 'Pizza', emoji: '🍕' },
+          { id: 'salad', name: 'Salad', emoji: '🥗' },
+          { id: 'sandwich', name: 'Sandwich', emoji: '🥪' },
+          { id: 'smoothie', name: 'Smoothie', emoji: '🥤' },
+          { id: 'cookies', name: 'Cookies', emoji: '🍪' }
+        ].map((food) => {
+          const result = results.find(r => r.foodId === food.id);
+          return (
+            <View key={food.id} style={styles.positionRow}>
+              <View style={styles.positionInfo}>
+                <Text style={styles.positionEmoji}>{food.emoji}</Text>
+                <Text style={styles.positionNumber}>{food.name}</Text>
+              </View>
 
-            <View style={styles.barContainer}>
-              <View
-                style={[
-                  styles.bar,
-                  {
-                    width: `${result.choiceRate}%`,
-                    backgroundColor: '#007bff'
-                  }
-                ]}
-              />
-              <Text style={styles.barLabel}>{result.choiceRate}% chose this</Text>
+              <View style={styles.barContainer}>
+                <View
+                  style={[
+                    styles.bar,
+                    {
+                      width: `${result.choiceRate}%`,
+                      backgroundColor: '#007bff'
+                    }
+                  ]}
+                />
+                <Text style={styles.barLabel}>{result.choiceRate}% chose this</Text>
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
 
       {/* Key Insights */}
@@ -158,11 +168,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    minHeight: 40,
   },
   positionInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: 80,
+    width: 100,
+    flexShrink: 0,
   },
   positionEmoji: {
     fontSize: 24,
@@ -176,11 +188,14 @@ const styles = StyleSheet.create({
   barContainer: {
     flex: 1,
     marginLeft: 16,
+    minWidth: 0,
   },
   bar: {
     height: 24,
     borderRadius: 12,
     marginBottom: 4,
+    minWidth: 20,
+    maxWidth: '100%',
   },
   barLabel: {
     fontSize: 14,
