@@ -232,6 +232,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1,
     borderColor: '#2196f3',
+    maxWidth: 400,
+    width: '100%',
   },
   conceptTitle: {
     fontSize: 18,
@@ -251,6 +253,8 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     borderWidth: 1,
     borderColor: '#ff9800',
+    maxWidth: 400,
+    width: '100%',
   },
   challengeTitle: {
     fontSize: 18,
