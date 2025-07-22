@@ -1,22 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { FOOD_ITEMS } from '../gameData';
+import { ALL_FOOD_ITEMS } from '../gameData';
 
-const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false, swapsUsed = 0, onSwapUsed, onResetSwaps }) => {
+const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false, day = 1 }) => {
   const [selectedItems, setSelectedItems] = useState([]);
-  const maxSwaps = 1;
+
+  // Reset selection when day changes
+  useEffect(() => {
+    setSelectedItems([]);
+  }, [day]);
 
   const getFoodItemData = (foodId) => {
-    return FOOD_ITEMS.find(item => item.id === foodId);
+    return ALL_FOOD_ITEMS.find(item => item.id === foodId);
   };
 
   const handleItemPress = (index) => {
-    if (disabled || swapsUsed >= maxSwaps) return;
+    if (disabled) return;
 
     const isSelected = selectedItems.includes(index);
 
@@ -37,16 +41,13 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false, swa
         [newOrder[firstIndex], newOrder[secondIndex]] = [newOrder[secondIndex], newOrder[firstIndex]];
         onOrderChange(newOrder);
 
-        // Track the swap
-        if (onSwapUsed) onSwapUsed();
-
-        // Clear selection
+        // Clear selection for next swap
         setSelectedItems([]);
       }
     }
   };
 
-  const renderGridItem = (foodId, index) => {
+  const renderLineItem = (foodId, index) => {
     const foodData = getFoodItemData(foodId);
     const isSelected = selectedItems.includes(index);
 
@@ -54,23 +55,26 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false, swa
       <TouchableOpacity
         key={`${foodId}-${index}`}
         style={[
-          styles.gridItem,
-          isSelected && styles.gridItemSelected,
-          (disabled || swapsUsed >= maxSwaps) && styles.gridItemDisabled
+          styles.lineItem,
+          isSelected && styles.lineItemSelected,
+          disabled && styles.lineItemDisabled
         ]}
         onPress={() => handleItemPress(index)}
-        disabled={disabled || swapsUsed >= maxSwaps}
-        activeOpacity={(disabled || swapsUsed >= maxSwaps) ? 1 : 0.7}
+        disabled={disabled}
+        activeOpacity={disabled ? 1 : 0.9}
       >
-        <View style={[styles.gridContent, isSelected && styles.gridContentSelected]}>
-          <Text style={styles.gridEmoji}>{foodData.emoji}</Text>
-          <Text style={styles.gridName}>{foodData.name}</Text>
-          <Text style={styles.gridStats}>
-            Health: {foodData.healthValue}
-          </Text>
-          <Text style={styles.gridStats}>
-            Popularity: {foodData.basePopularity}
-          </Text>
+        <View style={styles.positionIndicator}>
+          <Text style={styles.positionNumber}>{index + 1}</Text>
+        </View>
+        
+        <View style={styles.foodContent}>
+          <Text style={styles.foodEmoji}>{foodData.emoji}</Text>
+          <Text style={styles.foodName}>{foodData.name}</Text>
+          
+          <View style={styles.statsContainer}>
+            <Text style={styles.statText}>Health: {foodData.healthValue}</Text>
+            <Text style={styles.statText}>Appeal: {foodData.basePopularity}</Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -78,74 +82,74 @@ const FoodOrderingInterface = ({ foodOrder, onOrderChange, disabled = false, swa
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cafeteria Layout</Text>
-      <Text style={styles.subtitle}>
-        {disabled 
-          ? 'Current arrangement' 
-          : swapsUsed >= maxSwaps 
-            ? 'One swap per day - ready to test this arrangement!' 
-            : 'Tap two items to swap their positions (1 swap allowed)'}
-      </Text>
+      <View style={styles.headerSection}>
+        <Text style={styles.title}>Arrange Food Line</Text>
+        <Text style={styles.subtitle}>
+          {disabled 
+            ? 'Current arrangement' 
+            : 'Tap two items to swap positions'}
+        </Text>
+      </View>
 
-      <View style={styles.flowContainer}>
-        <View style={styles.gameWrapper}>
-          <View style={styles.gridContainer}>
-            <View style={styles.studentFlow}>
-              <Text style={styles.studentFlowText}>Student Flow</Text>
-              <Text style={styles.studentFlowArrow}>↓</Text>
-              <Text style={styles.studentFlowArrow}>↓</Text>
-              <Text style={styles.studentFlowArrow}>↓</Text>
-            </View>
-
-            <View style={styles.grid}>
-              {foodOrder.map((foodId, index) => renderGridItem(foodId, index))}
-            </View>
-          </View>
+      <View style={styles.foodLineSection}>
+        <View style={styles.cafeteriaLine}>
+          {foodOrder.map((foodId, index) => renderLineItem(foodId, index))}
+        </View>
+        
+        <View style={styles.flowIndicator}>
+          <Text style={styles.flowText}>Students walk from 1 to 5 in order</Text>
         </View>
       </View>
 
-
-      {/* Selection feedback */}
-      {selectedItems.length > 0 && (
-        <View style={styles.selectionFeedback}>
-          <Text style={styles.selectionText}>
-            {selectedItems.length === 1 ? 'Now tap another item to swap' : 'Swapping items...'}
-          </Text>
+      <View style={styles.legendContainer}>
+        <View style={styles.legendItem}>
+          <Text style={styles.legendLabel}>Health:</Text>
+          <Text style={styles.legendText}>Nutritional value</Text>
         </View>
-      )}
-
-      {/* Reset button when swaps are used up */}
-      {!disabled && swapsUsed >= maxSwaps && onResetSwaps && (
-        <View style={styles.resetContainer}>
-          <TouchableOpacity style={styles.resetButton} onPress={() => {
-            setSelectedItems([]);
-            onResetSwaps();
-          }}>
-            <Text style={styles.resetButtonText}>Reset Swap (Try Different Arrangement)</Text>
-          </TouchableOpacity>
+        <View style={styles.legendItem}>
+          <Text style={styles.legendLabel}>Appeal:</Text>
+          <Text style={styles.legendText}>Student preference</Text>
         </View>
-      )}
+      </View>
+
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f8f9fa',
-    padding: 8,
+    backgroundColor: 'transparent',
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    maxWidth: 800,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  headerSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 16,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
     color: '#2c3e50',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: 16,
-    color: '#7f8c8d',
+    color: '#6c757d',
+    fontWeight: '400',
+  },
+  foodLineSection: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   flowContainer: {
     alignItems: 'center',
@@ -154,154 +158,171 @@ const styles = StyleSheet.create({
   },
   gameWrapper: {
     width: '100%',
-    maxWidth: 450,
+    maxWidth: 700,
     alignSelf: 'center',
+  },
+  horizontalFlowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: 16,
+    marginVertical: 8,
   },
   flowIndicator: {
     alignItems: 'center',
-    marginVertical: 8,
+    marginVertical: 12,
+  },
+  flowIndicatorLeft: {
+    alignItems: 'center',
+    marginRight: 20,
+    minWidth: 90,
+    paddingVertical: 8,
+  },
+  flowIndicatorRight: {
+    alignItems: 'center',
+    marginLeft: 20,
+    minWidth: 90,
+    paddingVertical: 8,
+  },
+  flowIndicatorBelow: {
+    alignItems: 'center',
+    marginTop: 8,
+    paddingVertical: 8,
   },
   flowText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6c757d',
-    fontWeight: '600',
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 16,
   },
   flowArrow: {
     fontSize: 20,
     color: '#007bff',
     fontWeight: 'bold',
   },
-  gridContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    maxWidth: '100%',
-  },
-  studentFlow: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 60,
-    marginRight: 12,
-    flexShrink: 0,
-  },
-  studentFlowText: {
-    fontSize: 12,
-    color: '#6c757d',
-    fontWeight: '600',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  studentFlowArrow: {
-    fontSize: 16,
-    color: '#007bff',
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  grid: {
+  cafeteriaLine: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    flex: 1,
-    maxWidth: '100%',
-  },
-  gridItem: {
-    width: '45%',
-    aspectRatio: 0.75,
-    backgroundColor: '#fff',
-    margin: '2.5%',
-    borderRadius: 12,
-    justifyContent: 'space-between',
     alignItems: 'center',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    padding: 10,
+    paddingVertical: 8,
+    gap: 8,
   },
-  gridItemDisabled: {
+  lineItem: {
+    flex: 1,
+    maxWidth: 150,
+    minWidth: 90,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    padding: 10,
+    minHeight: 130,
+    position: 'relative',
+  },
+  lineItemDisabled: {
     opacity: 0.7,
   },
-  gridContent: {
-    flex: 1,
+  lineContent: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  gridContentSelected: {
+  lineContentSelected: {
     backgroundColor: 'transparent',
   },
-  gridEmoji: {
-    fontSize: 36,
-    marginBottom: 8,
+  lineItemSelected: {
+    borderColor: '#4a90e2',
+    borderWidth: 2,
+    backgroundColor: '#f0f8ff',
+    transform: [{ scale: 1.02 }],
   },
-  gridName: {
-    fontSize: 16,
-    fontWeight: '700',
+  positionIndicator: {
+    position: 'absolute',
+    top: -8,
+    left: -8,
+    backgroundColor: '#4a90e2',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  positionNumber: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  foodContent: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingTop: 8,
+  },
+  foodEmoji: {
+    fontSize: 32,
+    marginBottom: 4,
+  },
+  foodName: {
+    fontSize: 13,
+    fontWeight: '600',
     color: '#2c3e50',
     textAlign: 'center',
-    marginBottom: 6,
+    lineHeight: 16,
+    marginBottom: 8,
   },
-  gridStats: {
+  statsContainer: {
+    width: '100%',
+    gap: 4,
+  },
+  statText: {
     fontSize: 11,
     color: '#6c757d',
     textAlign: 'center',
     fontWeight: '500',
-    lineHeight: 14,
-    marginBottom: 2,
   },
-  gridItemSelected: {
-    borderColor: '#007bff',
-    borderWidth: 3,
-    backgroundColor: '#f0f8ff',
-    shadowColor: '#007bff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  disabledOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(248, 249, 250, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 16,
-  },
-  selectionFeedback: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    right: 20,
-    backgroundColor: 'rgba(0, 123, 255, 0.9)',
-    padding: 10,
-    borderRadius: 8,
-    zIndex: 1001,
-  },
-  selectionText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  resetContainer: {
+  flowIndicator: {
     alignItems: 'center',
     marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
   },
-  resetButton: {
-    backgroundColor: '#6c757d',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  resetButtonText: {
-    color: 'white',
+  flowText: {
     fontSize: 14,
-    fontWeight: '600',
+    color: '#6c757d',
+    fontWeight: '500',
     textAlign: 'center',
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 8,
+    flexWrap: 'wrap',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  legendLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#495057',
+  },
+  legendText: {
+    fontSize: 12,
+    color: '#6c757d',
   },
 });
 
 export default FoodOrderingInterface;
-

@@ -1,189 +1,231 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const SimpleResultsView = ({ results, healthScore, insights, comparison, target, isFirstDay = false }) => {
+const SimpleResultsView = ({ results, healthScore, insights, isFirstDay = false, day = 0, dailySatisfactionLevels = [], currentSatisfaction = null }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{isFirstDay ? 'Day 0 Results' : 'Daily Results'}</Text>
+      <Text style={styles.title}>Day {day} Results</Text>
       
-      {isFirstDay && (
-        <View style={styles.narrativeContainer}>
-          <Text style={styles.narrativeText}>
-            Your first day on the job. You observed the lunch rush and took notes on what happened...
-          </Text>
+      {/* Weekly Progress Tracker */}
+      {dailySatisfactionLevels.length > 0 && (
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressTitle}>Week Progress</Text>
+          <View style={styles.dailyScoresRow}>
+            {Array.from({ length: 5 }, (_, i) => {
+              const satisfaction = dailySatisfactionLevels[i];
+              const isCurrentDay = i === day - 1;
+              const isCompleted = satisfaction !== undefined;
+              
+              const getSatisfactionColor = (level) => {
+                switch (level) {
+                  case 'Excellent': return '#2e7d32';
+                  case 'Good': return '#4a90e2';
+                  case 'Fair': return '#ff8c00';
+                  case 'Poor': return '#d32f2f';
+                  default: return '#94a3b8';
+                }
+              };
+              
+              const getSatisfactionBgColor = (level) => {
+                switch (level) {
+                  case 'Excellent': return '#e8f5e9';
+                  case 'Good': return '#e3f2fd';
+                  case 'Fair': return '#fff3e0';
+                  case 'Poor': return '#ffebee';
+                  default: return '#f8f9fa';
+                }
+              };
+              
+              return (
+                <View key={i} style={[
+                  styles.dayScore,
+                  isCurrentDay && styles.currentDayScore,
+                  isCompleted && { backgroundColor: getSatisfactionBgColor(satisfaction.level) },
+                ]}>
+                  <Text style={styles.dayLabel}>Day {i + 1}</Text>
+                  <Text style={[
+                    styles.satisfactionValue,
+                    { color: isCompleted ? getSatisfactionColor(satisfaction.level) : '#6c757d' }
+                  ]}>
+                    {isCompleted ? satisfaction.level : '-'}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
         </View>
       )}
 
-      {/* Health Score - Big and Clear */}
-      <View style={styles.healthContainer}>
-        <Text style={styles.healthLabel}>Average Health Score</Text>
-        <Text style={[
-          styles.healthScore,
-          { color: healthScore >= target ? '#28a745' : '#dc3545' }
-        ]}>
-          {healthScore}/100
-        </Text>
-        <Text style={styles.healthTarget}>Target: {target}+</Text>
-      </View>
+      {/* Satisfaction Level */}
+      {currentSatisfaction && (
+        <View style={styles.healthScoreContainer}>
+          <Text style={styles.scoreLabel}>Performance</Text>
+          <Text style={[
+            styles.bigSatisfactionValue,
+            { color: currentSatisfaction.level === 'Excellent' ? '#2e7d32' : 
+                     currentSatisfaction.level === 'Good' ? '#4a90e2' :
+                     currentSatisfaction.level === 'Fair' ? '#ff8c00' : '#d32f2f' }
+          ]}>
+            {currentSatisfaction.level}
+          </Text>
+          <Text style={styles.satisfactionText}>
+            {currentSatisfaction.description}
+          </Text>
+          <Text style={styles.rawScoreText}>
+            Health Score: {healthScore}
+          </Text>
+        </View>
+      )}
 
       {/* Student Selection Results */}
       <View style={styles.positionContainer}>
         <Text style={styles.sectionTitle}>What Students Chose</Text>
         <Text style={styles.sectionSubtitle}>
-          {isFirstDay ? 'Here\'s what you noticed during the lunch rush:' : 'You watched 100 students go through the line. Here\'s what they picked:'}
+          {isFirstDay ? 'Observation results:' : 'Student choices:'}
         </Text>
 
-        {[
-          { id: 'apple', name: 'Apple', emoji: '🍎' },
-          { id: 'pizza', name: 'Pizza', emoji: '🍕' },
-          { id: 'salad', name: 'Salad', emoji: '🥗' },
-          { id: 'sandwich', name: 'Sandwich', emoji: '🥪' },
-          { id: 'smoothie', name: 'Smoothie', emoji: '🥤' },
-          { id: 'cookies', name: 'Cookies', emoji: '🍪' }
-        ].map((food) => {
-          const result = results.find(r => r.foodId === food.id);
-          return (
-            <View key={food.id} style={styles.positionRow}>
-              <View style={styles.positionInfo}>
-                <Text style={styles.positionEmoji}>{food.emoji}</Text>
-                <Text style={styles.positionNumber}>{food.name}</Text>
+        {results
+          .sort((a, b) => a.food.name.localeCompare(b.food.name))
+          .map((result) => {
+            return (
+              <View key={result.foodId} style={styles.positionRow}>
+                <View style={styles.positionInfo}>
+                  <Text style={styles.positionEmoji}>{result.food.emoji}</Text>
+                  <Text style={styles.positionName}>{result.food.name}</Text>
+                </View>
+
+                <View style={styles.barContainer}>
+                  <View
+                    style={[
+                      styles.bar,
+                      {
+                        width: `${result.choiceRate}%`,
+                        backgroundColor: '#e67e22'
+                      }
+                    ]}
+                  />
+                  <Text style={styles.barLabel}>{result.choiceRate}%</Text>
+                </View>
               </View>
-
-              <View style={styles.barContainer}>
-                <View
-                  style={[
-                    styles.bar,
-                    {
-                      width: `${result.choiceRate}%`,
-                      backgroundColor: '#007bff'
-                    }
-                  ]}
-                />
-                <Text style={styles.barLabel}>{result.choiceRate}% chose this</Text>
-              </View>
-            </View>
-          );
-        })}
+            );
+          })}
       </View>
-
-      {/* Key Insights */}
-      <View style={styles.insightsContainer}>
-        <Text style={styles.sectionTitle}>Key Insights</Text>
-        {insights.map((insight, index) => (
-          <View key={index} style={styles.insightRow}>
-            <Text style={styles.insightIcon}>{insight.icon}</Text>
-            <Text style={styles.insightText}>{insight.text}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Comparison if available */}
-      {comparison && (
-        <View style={styles.comparisonContainer}>
-          <Text style={styles.sectionTitle}>
-            Your Changes
-          </Text>
-          <Text style={styles.comparisonHealth}>
-            Health Score: {comparison.oldHealth} → {comparison.newHealth}
-            <Text style={[
-              styles.comparisonChange,
-              { color: comparison.healthChange > 0 ? '#28a745' : comparison.healthChange < 0 ? '#dc3545' : '#6c757d' }
-            ]}>
-              {comparison.healthChange > 0 ? '+' : comparison.healthChange < 0 ? '' : '+'}{comparison.healthChange}
-            </Text>
-          </Text>
-
-          {comparison.changes.map((change, index) => (
-            <Text key={index} style={styles.changeText}>
-              • {change.food.name}: {change.oldChoiceRate}% → {change.newChoiceRate}%
-              <Text style={[
-                styles.changeNumber,
-                { color: change.change > 0 ? '#28a745' : change.change < 0 ? '#dc3545' : '#6c757d' }
-              ]}>
-                ({change.change > 0 ? '+' : change.change < 0 ? '' : '+'}{change.change}%)
-              </Text>
-            </Text>
-          ))}
-        </View>
-      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#f8f9fa',
+    padding: 24,
+    paddingHorizontal: 16,
+    backgroundColor: '#fafafa',
+    maxWidth: 800,
+    alignSelf: 'center',
+    width: '100%',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#2c3e50',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
   },
-  healthContainer: {
+  healthScoreContainer: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 12,
+    padding: 28,
     alignItems: 'center',
-    marginBottom: 24,
     borderWidth: 1,
     borderColor: '#e9ecef',
+    marginBottom: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  healthLabel: {
+  scoreLabel: {
     fontSize: 16,
     color: '#6c757d',
     marginBottom: 8,
+    fontWeight: '600',
   },
-  healthScore: {
+  bigScoreValue: {
     fontSize: 48,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  bigSatisfactionValue: {
+    fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 8,
   },
-  healthTarget: {
+  satisfactionText: {
+    fontSize: 16,
+    color: '#6c757d',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  rawScoreText: {
     fontSize: 14,
     color: '#6c757d',
+    textAlign: 'center',
+  },
+  satisfactionValue: {
+    fontSize: 10,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 12,
   },
   positionContainer: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 32,
     borderWidth: 1,
     borderColor: '#e9ecef',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#2c3e50',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   sectionSubtitle: {
     fontSize: 14,
     color: '#6c757d',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   positionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    minHeight: 40,
+    marginBottom: 20,
+    minHeight: 44,
   },
   positionInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: 100,
+    width: 120,
+    minWidth: 100,
     flexShrink: 0,
   },
   positionEmoji: {
-    fontSize: 24,
-    marginRight: 8,
+    fontSize: 20,
+    marginRight: 6,
   },
-  positionNumber: {
-    fontSize: 16,
-    fontWeight: '600',
+  positionName: {
+    fontSize: 14,
     color: '#495057',
+    marginRight: 6,
+  },
+  healthValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   barContainer: {
     flex: 1,
@@ -202,71 +244,75 @@ const styles = StyleSheet.create({
     color: '#6c757d',
     fontWeight: '500',
   },
-  insightsContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  insightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  insightIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  insightText: {
-    fontSize: 15,
-    color: '#495057',
-    flex: 1,
-    lineHeight: 20,
-  },
-  comparisonContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  comparisonHealth: {
+  satisfactionText: {
     fontSize: 16,
-    color: '#495057',
-    marginBottom: 12,
-    fontWeight: '600',
-  },
-  comparisonChange: {
-    fontWeight: 'bold',
-  },
-  changeText: {
-    fontSize: 14,
     color: '#6c757d',
-    marginBottom: 4,
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  changeNumber: {
+  progressContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  progressTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  dailyScoresRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  dayScore: {
+    flex: 1,
+    minWidth: 55,
+    alignItems: 'center',
+    padding: 6,
+    marginHorizontal: 1,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  currentDayScore: {
+    borderColor: '#4a90e2',
+    borderWidth: 2,
+  },
+  dayLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6c757d',
+    marginBottom: 3,
+  },
+  scoreValue: {
+    fontSize: 18,
     fontWeight: 'bold',
   },
-  narrativeContainer: {
-    backgroundColor: '#1976d2',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 24,
-    borderWidth: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+  successScore: {
+    color: '#28a745',
   },
-  narrativeText: {
-    fontSize: 18,
-    color: '#ffffff',
-    lineHeight: 24,
-    textAlign: 'center',
+  failScore: {
+    color: '#dc3545',
+  },
+  averageText: {
+    fontSize: 16,
     fontWeight: '600',
+    color: '#495057',
+    textAlign: 'center',
   },
 });
 
